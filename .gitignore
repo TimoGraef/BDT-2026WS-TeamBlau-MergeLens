@@ -1,6 +1,9 @@
 # Created by https://www.toptal.com/developers/gitignore/api/c,c++,java,perl,ruby,cmake,linux,macos,perl6,csharp,python,windows,powershell
 # Edit at https://www.toptal.com/developers/gitignore?templates=c,c++,java,perl,ruby,cmake,linux,macos,perl6,csharp,python,windows,powershell
 
+# Local Agent Guideline
+.agents
+
 ### C ###
 # Prerequisites
 *.d
