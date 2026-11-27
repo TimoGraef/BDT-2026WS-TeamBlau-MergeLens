@@ -1,0 +1,12 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_INFERENCE_API_URL: ${VITE_INFERENCE_API_URL:-http://localhost:8000}
+        VITE_INFERENCE_MODE: ${VITE_INFERENCE_MODE:-mock}
+        VITE_GITHUB_API_URL: ${VITE_GITHUB_API_URL:-https://api.github.com}
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    restart: unless-stopped
