@@ -50,7 +50,27 @@ The raw data is filtered to retain relevant PR-related events and remove unneces
 - **PR description** — the text explaining the proposed change.
 - **PR status/outcome** — whether the pull request was merged or closed without merging, when this can be established.
 
-**Labeling assumption:** For this project, PRs closed without a merge are treated as lower-quality examples, regardless of whether the maintainer or the contributor closed them. This is a project-specific modeling assumption, not proof of the reason a PR was closed. GH Archive does not provide a dedicated `rejected` action. Review feedback such as `changes_requested` is distinct from a final PR outcome. Available fields and payload structures can differ across periods, so extraction rules must be checked against the actual archive records.
+The label represents the historical merge outcome. Confirmed merges are positive examples, and confirmed closures without a merge are negative examples. The outcome is a proxy learning signal and does not establish technical quality or the reason for closure.
+
+#### Run Phase 1 locally
+
+From `sys-src/backend/data-collection/` in PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force output | Out-Null
+docker build -t mergelens-data-collection .
+docker run --rm --mount "type=bind,source=$((Get-Location).Path)/output,target=/app/output" mergelens-data-collection
+```
+
+`run.bat` provides the same workflow on Windows. With Python 3.12 and the module's requirements installed, run `python data_collection.py` directly. The default starts on January 1, 2026 at 00:00 UTC and ends at the start of the current UTC day, exclusive. This uses complete UTC days. Set explicit dates for a smaller run, for example `--start 2026-01-01T00:00:00Z --end 2026-01-01T02:00:00Z`. For `docker run`, place the options after the image name. Phase 1 uses public GH Archive downloads without a GitHub token.
+
+The collector streams one archive at a time and retries transient download failures up to four times, waiting 2, 4, 8 and 16 seconds or longer when the server sends a `Retry-After` header. It saves compact daily checkpoints under `output/.archive-checkpoints-v1/` and matches one group of PR IDs at a time. After an interruption, rerun with the same output directory to reuse finished days and resume from the missing day.
+
+It writes CSV and Parquet for PRs whose opening and terminal events both fall within the interval. The first opening supplies creator and text fields. Missing fields remain null, and bot filtering uses the opening actor's `[bot]` suffix. A later terminal event replaces an earlier one only if it provides stronger evidence, with confirmed merge preferred over confirmed non-merge and unknown status. The exported terminal timestamp and action describe the selected event.
+
+The accompanying `*_summary.json` records the bounds, dataset filenames, outcome and bot counts, pending PRs, malformed records, download retries, and the frequency of each observed action. Retry counts reflect the downloads behind the successful checkpoints, including checkpoints reused from prior runs.
+
+Parquet preserves the typed schema. To read the CSV with the same types in Polars, use `pl.read_csv(path, schema_overrides=SCHEMA)` with `SCHEMA` from `data_collection.py`. Phase 1 exports are development datasets for inspection and later enrichment.
 
 ### 3. Data Storage
 
@@ -146,4 +166,4 @@ Suggested scopes include `database`, `frontend`, and `backend`.
 
 ## Project Status
 
-**Architecture / planning stage.** This README documents the intended workflow based on the project sketch and review notes; it does not claim that every component has already been implemented.
+The standalone Phase 1 collector implements GH Archive extraction. The rest of this README describes the intended project workflow.

@@ -7,7 +7,9 @@ cd /d "%~dp0"
 docker build -t mergelens-data-collection .
 if errorlevel 1 goto error
 
-docker run --rm --env-file .env mergelens-data-collection
+if not exist output mkdir output
+if errorlevel 1 goto error
+docker run --rm --mount "type=bind,source=%CD%\output,target=/app/output" mergelens-data-collection %*
 if errorlevel 1 goto error
 
 pause

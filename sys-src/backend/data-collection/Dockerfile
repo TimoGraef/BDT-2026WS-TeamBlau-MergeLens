@@ -8,4 +8,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY data_collection.py .
 
-CMD ["python", "data_collection.py"]
+ENTRYPOINT ["python", "data_collection.py"]

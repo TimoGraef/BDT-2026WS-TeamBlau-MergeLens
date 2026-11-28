@@ -18,3 +18,6 @@
 #!**/README.md 
 #**/node_modules 
 #**/*.class 
+output/
+**/__pycache__/
+**/*.json.gz

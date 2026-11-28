@@ -4,6 +4,10 @@
 # Local Agent Guideline
 .agents
 
+# Data collection artifacts
+/sys-src/backend/data-collection/output/
+/sys-src/backend/data-collection/**/*.json.gz
+
 ### C ###
 # Prerequisites
 *.d
